@@ -3,26 +3,26 @@ from conan.tools.meson import Meson
 
 
 class TSPConan(ConanFile):
-    name = "bounded_priority_deque"
-    version = "v0.1.0"
+    name = "bpd"
+    version = "0.1.0"
     license = "MIT"
     author = "Cooper Larson | cooper.larson1@gmail.com"
     url = ""
-    description = ("A performant and minimal, header only bounded priority deque"
-                   " that supports { min, max, custom-comparator }.")
+    description = ("A lightweight, performant, header-only bounded-priority-deque"
+                   " that supports: { min, max, custom-comparator }.")
     topics = ("c++", "data structures", "algorithms", "performance")
     settings = "os", "compiler", "arch", "build_type"
     requires = [
         "gtest/1.14.0"
     ]
     generators = "PkgConfigDeps", "MesonToolchain"
-    exports_sources = "meson.build", "main.cpp", "test/*"
+    exports_sources = "meson.build", "main.cpp", "include/*", "test/*"
 
     def layout(self):
         self.folders.source = '.'
-        self.folders.build = 'build/meson'  # primary build dir with executables and .o files
-        self.folders.generators = 'build/generators'  # conan package locator/builder files
-        self.folders.package = 'build/package'  # package output directory
+        self.folders.build = 'build/meson'
+        self.folders.generators = 'build/generators'
+        self.folders.package = 'build/package'
 
     def build(self):
         meson = Meson(self)
@@ -36,3 +36,8 @@ class TSPConan(ConanFile):
     def package(self):
         meson = Meson(self)
         meson.install()
+
+    def package_info(self):
+        # self.cpp_info.libs = ["bpd"]  # if we need src files in future
+        self.cpp_info.includedirs = ['include']
+
