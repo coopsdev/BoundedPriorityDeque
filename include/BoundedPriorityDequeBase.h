@@ -8,11 +8,14 @@
 #include "BoundingPair.h"
 #include <vector>
 #include <utility>
-#include <stdexcept>
 #include <memory>
 #include <mutex>
 #include <functional>
 #include <algorithm>
+
+#ifdef ENABLE_DEBUG
+    #include <stdexcept>
+#endif
 
 
 template<typename K, typename V>
