@@ -2,8 +2,8 @@
 // Created by Cooper Larson on 7/30/24.
 //
 
-#ifndef SERVER_BOUNDEDHEAP_H
-#define SERVER_BOUNDEDHEAP_H
+#ifndef SERVER_BOUNDED_PRIORITY_DEQUE_BASE_H
+#define SERVER_BOUNDED_PRIORITY_DEQUE_BASE_H
 
 #include "BoundingPair.h"
 #include <vector>
@@ -100,12 +100,14 @@ public:
     }
 
     void push(const BoundingPair<K, V>& element) {
-        if (_container.size() <= 2) _container.push_back(element);
+        if (_container.size() < _k) _container.push_back(element);
         else {
-            if (_container.size() > 1 && !compareElements(element.first, _container.back().first)) return;
+            if (!compareElements(element.first, _container.back().first)) return;
+
             const auto& [foundMatch, index] = binarySearch(element);
-            std::swap(_container[index], _container.back());
+            if (index != _container.size() - 1) std::swap(_container[index], _container.back());
         }
+
         bubbleUp();
         if (_container.size() > _k) _container.pop_back();
     }
@@ -124,4 +126,4 @@ public:
 };
 
 
-#endif //SERVER_BOUNDEDHEAP_H
+#endif //SERVER_BOUNDED_PRIORITY_DEQUE_BASE_H

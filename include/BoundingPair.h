@@ -2,8 +2,8 @@
 // Created by Cooper Larson on 7/31/24.
 //
 
-#ifndef BOUNDED_HEAP_BOUNDINGPAIR_H
-#define BOUNDED_HEAP_BOUNDINGPAIR_H
+#ifndef BOUNDED_PRIORITY_DEQUE_BOUNDING_PAIR_H
+#define BOUNDED_PRIORITY_DEQUE_BOUNDING_PAIR_H
 
 #include <utility>
 #include <type_traits>
@@ -65,4 +65,4 @@ public:
     }
 };
 
-#endif //BOUNDED_HEAP_BOUNDINGPAIR_H
+#endif //BOUNDED_PRIORITY_DEQUE_BOUNDING_PAIR_H
