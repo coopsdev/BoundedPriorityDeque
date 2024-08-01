@@ -1,10 +1,11 @@
 from conan import ConanFile
 from conan.tools.meson import Meson
+from conan.tools.files import copy
 
 
-class TSPConan(ConanFile):
+class Pkg(ConanFile):
     name = "bpd"
-    version = "0.1.0"
+    version = "0.2.0"
     license = "MIT"
     author = "Cooper Larson | cooper.larson1@gmail.com"
     url = ""
@@ -16,7 +17,8 @@ class TSPConan(ConanFile):
         "gtest/1.14.0"
     ]
     generators = "PkgConfigDeps", "MesonToolchain"
-    exports_sources = "meson.build", "main.cpp", "include/*", "test/*"
+    exports_sources = "meson.build", "include/*", "test/*"
+    implements = ["auto_header_only"]
 
     def layout(self):
         self.folders.source = '.'
@@ -34,10 +36,13 @@ class TSPConan(ConanFile):
         meson.test()
 
     def package(self):
-        meson = Meson(self)
-        meson.install()
+        copy(self, "*.h", self.source_folder, self.package_folder)
 
     def package_info(self):
-        # self.cpp_info.libs = ["bpd"]  # if we need src files in future
         self.cpp_info.includedirs = ['include']
+        self.cpp_info.bindirs = []
+        self.cpp_info.libdirs = []
+
+    def package_id(self):
+        self.info.clear()
 

@@ -2,8 +2,8 @@
 // Created by Cooper Larson on 7/30/24.
 //
 
-#ifndef SERVER_BOUNDEDHEAP_H
-#define SERVER_BOUNDEDHEAP_H
+#ifndef SERVER_BOUNDED_PRIORITY_DEQUE_BASE_H
+#define SERVER_BOUNDED_PRIORITY_DEQUE_BASE_H
 
 #include "BoundingPair.h"
 #include <vector>
@@ -12,116 +12,165 @@
 #include <mutex>
 #include <functional>
 #include <algorithm>
+#include <set>
 
 #ifdef ENABLE_DEBUG
-    #include <stdexcept>
+#include <stdexcept>
 #endif
-
 
 template<typename K, typename V>
 class BoundedPriorityDequeBase {
 protected:
-    std::vector<BoundingPair<K, V>> _container;
-    size_t _k;
+    struct Node {
+        BoundingPair<K, V> _data;
+        Node* _prev;
+        Node* _next;
 
-    void bubbleUp() {
-        unsigned int index = _container.size() - 1;
-        while (index > 0 && compareElements(_container[index].first, _container[index - 1].first)) {
-            std::swap(_container[index], _container[index - 1]);
-            --index;
-        }
-    }
+        explicit Node(const BoundingPair<K, V>& pair) : _data(pair), _prev(nullptr), _next(nullptr) {}
+    };
 
-    void bubbleDown() {
-        size_t index = 0;
-        while (index < _container.size() - 1 && !compareElements(_container[index].first, _container[index + 1].first)) {
-            std::swap(_container[index], _container[index + 1]);
-            ++index;
-        }
-    }
+    Node* _head;
+    Node* _tail;
+    std::set<Node*, std::function<bool(const Node* a, const Node* b)>> _index;
+    size_t _k, _size;
 
     virtual bool compareElements(K a, K b) const = 0;
 
-    std::pair<bool, size_t> binarySearch(const BoundingPair<K, V>& pair) {
-        auto val = pair.first;
-        if (_container.empty()) return { false, 0 };
-        size_t hi = _container.size() - 1, lo = 0;
-        while (lo <= hi) {
-            auto mid = lo + (hi - lo) / 2;
-            if (_container[mid].first == val) return { true, mid };
-            else if (!compareElements(_container[mid].first, val)) lo = mid + 1;
-            else hi = mid - 1;
-        }
-        return { false, lo };
-    }
-
 public:
-    explicit BoundedPriorityDequeBase(unsigned int capacity = 0) : _container(), _k(capacity) { _container.reserve(_k + 1); }
+    explicit BoundedPriorityDequeBase(const std::function<bool(const Node* a, const Node* b)>& compare, unsigned int capacity = 0) :
+            _head(nullptr), _tail(nullptr),
+            _index(compare),
+            _k(capacity), _size(0) {}
 
     BoundingPair<K, V> top() const {
 #ifdef ENABLE_DEBUG
-        if (_container.empty()) throw std::runtime_error("Attempted to access top element of empty BoundedHeap");
+        if (empty()) throw std::runtime_error("Attempted to access top element of empty BoundedPriorityDeque");
 #endif
-        return _container.front();
+        return _head->_data;
     }
 
     BoundingPair<K, V> bottom() const {
 #ifdef ENABLE_DEBUG
-        if (_container.empty()) throw std::runtime_error("Attempted to access bottom element of empty BoundedHeap");
+        if (empty()) throw std::runtime_error("Attempted to access bottom element of empty BoundedPriorityDeque");
 #endif
-        return _container.back();
+        return _tail->_data;
     }
 
-    [[nodiscard]] double bottomK() const {
+    K bottomK() const {
 #ifdef ENABLE_DEBUG
-        if (_container.empty()) throw std::runtime_error("Attempted to access bottom element of empty BoundedHeap");
+        if (empty()) throw std::runtime_error("Attempted to access bottom element of empty BoundedPriorityDeque");
 #endif
-        return _container.back().first;
+        return _tail->_data.first;
     }
 
     BoundingPair<K, V> pop() {
 #ifdef ENABLE_DEBUG
-        if (_container.empty()) throw std::runtime_error("Attempted to pop from empty BoundedHeap");
+        if (empty()) throw std::runtime_error("Attempted to pop from empty BoundedPriorityDeque");
 #endif
-        auto topElement = _container.front();
-        if (_container.size() > 1) _container.front() = std::move(_container.back());
-        _container.pop_back();
-        if (!_container.empty()) bubbleDown();
-        return topElement;
+        auto topElement = _head;
+
+        if (_size > 1) {
+            _head = topElement->_next;
+            _head->_prev = _tail;
+            _tail->_next = _head;
+        } else {
+            _head = nullptr;
+            _tail = nullptr;
+        }
+
+        _index.erase(topElement);
+        BoundingPair<K, V> data = topElement->_data;
+        delete topElement;
+        --_size;
+
+        return data;
     }
 
     BoundingPair<K, V> popBottom() {
 #ifdef ENABLE_DEBUG
-        if (_container.empty()) throw std::runtime_error("Attempted to pop from empty BoundedHeap");
+        if (empty()) throw std::runtime_error("Attempted to pop from empty BoundedPriorityDeque");
 #endif
-        auto bottomElement = _container.back();
-        _container.pop_back();
-        return bottomElement;
+        auto bottomElement = _tail;
+
+        if (_size > 1) {
+            _tail = bottomElement->_prev;
+            _tail->_next = _head;
+            _head->_prev = _tail;
+        } else {
+            _head = nullptr;
+            _tail = nullptr;
+        }
+
+        _index.erase(bottomElement);
+        BoundingPair<K, V> data = bottomElement->_data;
+        delete bottomElement;
+        --_size;
+
+        return data;
     }
 
     void push(const BoundingPair<K, V>& element) {
-        if (_container.size() <= 2) _container.push_back(element);
-        else {
-            if (_container.size() > 1 && !compareElements(element.first, _container.back().first)) return;
-            const auto& [foundMatch, index] = binarySearch(element);
-            std::swap(_container[index], _container.back());
+        Node* newNode = new Node(element);
+
+        auto insertAsNewHead = [&] {
+            newNode->_next = _head;
+            newNode->_prev = _tail;
+            _head->_prev = newNode;
+            _tail->_next = newNode;
+            _head = newNode;
+        };
+
+        auto insertAsNewTail = [&] {
+            newNode->_prev = _tail;
+            newNode->_next = _head;
+            _tail->_next = newNode;
+            _head->_prev = newNode;
+            _tail = newNode;
+        };
+
+        auto insertInMiddle = [&](Node* it) {
+            newNode->_next = it;
+            newNode->_prev = it->_prev;
+            it->_prev->_next = newNode;
+            it->_prev = newNode;
+        };
+
+        if (!_head) {
+            _head = _tail = newNode;
+            _head->_next = _head;
+            _head->_prev = _head;
+        } else {
+            auto it = _index.lower_bound(newNode);
+            if (it == _index.begin()) insertAsNewHead();
+            else if (it == _index.end()) insertAsNewTail();
+            else insertInMiddle(*it);
         }
-        bubbleUp();
-        if (_container.size() > _k) _container.pop_back();
+
+        _index.insert(newNode);
+        ++_size;
+        if (_size > _k) popBottom();
     }
 
-    void emplace(double n, const V& point) { push({n, point}); }
-    void clear() { _container.clear(); }
-    [[nodiscard]] unsigned int size() const { return _container.size(); }
+    void emplace(K key, const V& value) { push(BoundingPair<K, V>(key, value)); }
+
+    void operator+=(const BoundedPriorityDequeBase<K, V>& rhs) {
+        if (rhs.empty()) return;
+        auto currNode = rhs._head;
+        do {
+            if (_size == _k && !compareElements(currNode->_data.first, bottomK())) break;
+            push(currNode->_data);
+            currNode = currNode->_next;
+        } while (currNode != rhs._head);
+    }
+
+    void clear() { while (_size > 0) pop(); }
+    [[nodiscard]] unsigned int size() const { return _size; }
     [[nodiscard]] unsigned int capacity() const { return _k; }
-    [[nodiscard]] bool empty() const { return _container.empty(); }
-    [[nodiscard]] bool full() const { return _container.size() == _k; }
+    [[nodiscard]] bool empty() const { return _size == 0; }
+    [[nodiscard]] bool full() const { return _size == _k; }
 
-    void setCapacity(unsigned int k) {
-        _k = k;
-        _container.reserve(k);
-    }
+    void setCapacity(unsigned int k) { _k = k; }
 };
 
+#endif //SERVER_BOUNDED_PRIORITY_DEQUE_BASE_H
 
-#endif //SERVER_BOUNDEDHEAP_H

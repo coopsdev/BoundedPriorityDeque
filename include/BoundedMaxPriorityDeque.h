@@ -2,29 +2,25 @@
 // Created by Cooper Larson on 7/13/24.
 //
 
-#ifndef SERVER_BOUNDED_MAX_HEAP
-#define SERVER_BOUNDED_MAX_HEAP
+#ifndef SERVER_BOUNDED_MAX_PRIORITY_DEQUE_H
+#define SERVER_BOUNDED_MAX_PRIORITY_DEQUE_H
 
 #include "BoundedPriorityDequeBase.h"
 
 template<typename K, typename V>
 class BoundedMaxPriorityDeque : public BoundedPriorityDequeBase<K, V> {
-protected:
+    using Node = BoundedPriorityDequeBase<K, V>::Node;
 
+protected:
     [[nodiscard]] bool compareElements(K a, K b) const override { return a > b; }
 
 public:
-    explicit BoundedMaxPriorityDeque(unsigned int capacity = 0) : BoundedPriorityDequeBase<K, V>(capacity) {}
+    explicit BoundedMaxPriorityDeque(unsigned int capacity = 0) :
+        BoundedPriorityDequeBase<K, V>(
+                [](const Node* a, const Node* b) { return a->_data.first > b->_data.first; }, capacity) {}
 
-    void operator+=(const BoundedMaxPriorityDeque<K, V>& rhs) {
-        if (rhs._container.empty()) return;
-        for (const BoundingPair element : rhs._container) {
-            if (this->size() == this->capacity() && element.first <= this->bottomDist()) break;
-            BoundedPriorityDequeBase<K, V>::push(element);
-        }
-    }
 };
 
 
-#endif //SERVER_BOUNDED_MAX_HEAP
+#endif //SERVER_BOUNDED_MAX_PRIORITY_DEQUE_H
 

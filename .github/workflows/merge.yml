@@ -1,0 +1,44 @@
+name: C++ CI Merge => Main
+
+on:
+  pull_request:
+    types: [ closed ]
+    branches:
+      - main
+
+jobs:
+  package-and-upload:
+    runs-on: [self-hosted, Linux, X64, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set PATH for pipx binaries
+        run: echo "PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Get latest release tag
+        id: latest-tag
+        run: echo "::set-output name=tag::$(git describe --tags `git rev-list --tags --max-count=1`)"
+
+      - name: Cache ccache and dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            /home/gh-runner/.cache/ccache
+          key: ${{ runner.os }}-ccache-${{ steps.latest-tag.outputs.tag }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+            ${{ runner.os }}-ccache-${{ steps.latest-tag.outputs.tag }}
+
+      - name: Install Package Dependencies
+        run: |
+          conan install . --build=missing
+
+      - name: Package
+        run: |
+          cd /home/gh-runner/actions-runner/_work/TSP/TSP
+          conan create . -pr:a vps-release --test-folder="" --build=missing
+
+      - name: Upload Packages to Artifactory
+        run: |
+          conan upload "*" -r vps-local --confirm
