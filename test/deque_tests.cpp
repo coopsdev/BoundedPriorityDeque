@@ -18,72 +18,82 @@ TEST(BoundingPairTest, Comparison) {
     ASSERT_TRUE(pair1 < pair2);
 }
 
-TEST(MinHeapTest, BasicOperations) {
-    BoundedMinPriorityDeque<int, std::string> heap(2);
-    heap.push(BoundingPair<int, std::string>(10, "ten"));
-    heap.push(BoundingPair<int, std::string>(20, "twenty"));
-    heap.push(BoundingPair<int, std::string>(5, "five"));
+TEST(DequeTest, OneItemCapacity) {
+    BoundedMinPriorityDeque<double, std::string> deque(1);
+    deque.emplace(4, "four");
+    deque.emplace(8, "eight");
+    deque.emplace(2, "two");
+    deque.emplace(1, "one");
 
-    ASSERT_EQ(heap.top().second, "five");
-    ASSERT_EQ(heap.pop().second, "five");
-    ASSERT_EQ(heap.top().second, "ten");
-    ASSERT_TRUE(heap.pop().second == "ten");
-    ASSERT_TRUE(heap.empty());
+    ASSERT_EQ(deque.pop().second, "one");
 }
 
-TEST(MaxHeapTest, BasicOperations) {
-    BoundedMaxPriorityDeque<int, std::string> heap(2);
-    heap.push(BoundingPair<int, std::string>(10, "ten"));
-    heap.push(BoundingPair<int, std::string>(20, "twenty"));
-    heap.push(BoundingPair<int, std::string>(5, "five"));
+TEST(MinDequeTest, BasicOperations) {
+    BoundedMinPriorityDeque<int, std::string> deque(2);
+    deque.push(BoundingPair<int, std::string>(10, "ten"));
+    deque.push(BoundingPair<int, std::string>(20, "twenty"));
+    deque.push(BoundingPair<int, std::string>(5, "five"));
 
-    ASSERT_EQ(heap.top().second, "twenty");
-    ASSERT_EQ(heap.pop().second, "twenty");
-    ASSERT_EQ(heap.top().second, "ten");
-    ASSERT_TRUE(heap.pop().second == "ten");
-    ASSERT_TRUE(heap.empty());
+    ASSERT_EQ(deque.top().second, "five");
+    ASSERT_EQ(deque.pop().second, "five");
+    ASSERT_EQ(deque.top().second, "ten");
+    ASSERT_TRUE(deque.pop().second == "ten");
+    ASSERT_TRUE(deque.empty());
 }
 
-TEST(BoundedHeapTest, CustomComparator) {
-    BoundedPriorityDeque<int, std::string, std::greater<>> heap(10, std::greater<>());
-    heap.push(BoundingPair<int, std::string>(10, "ten"));
-    heap.push(BoundingPair<int, std::string>(20, "twenty"));
-    heap.push(BoundingPair<int, std::string>(5, "five"));
+TEST(MaxDequeTest, BasicOperations) {
+    BoundedMaxPriorityDeque<int, std::string> deque(2);
+    deque.push(BoundingPair<int, std::string>(10, "ten"));
+    deque.push(BoundingPair<int, std::string>(20, "twenty"));
+    deque.push(BoundingPair<int, std::string>(5, "five"));
 
-    ASSERT_EQ(heap.top().second, "twenty");
-    ASSERT_EQ(heap.pop().second, "twenty");
-    ASSERT_EQ(heap.top().second, "ten");
+    ASSERT_EQ(deque.top().second, "twenty");
+    ASSERT_EQ(deque.pop().second, "twenty");
+    ASSERT_EQ(deque.top().second, "ten");
+    ASSERT_EQ(deque.pop().second, "ten");
+    ASSERT_TRUE(deque.empty());
 }
 
-TEST(BoundedHeapTest, OverflowBehavior) {
-    BoundedMinPriorityDeque<int, std::string> heap(3);
-    heap.push(BoundingPair<int, std::string>(4, "four"));
-    heap.push(BoundingPair<int, std::string>(1, "one"));
-    heap.push(BoundingPair<int, std::string>(3, "three"));
-    heap.push(BoundingPair<int, std::string>(2, "two"));  // Should push out "four"
+TEST(BoundedDequeTest, CustomComparator) {
+    BoundedPriorityDeque<int, std::string, std::greater<>> deque(10, std::greater<>());
+    deque.push(BoundingPair<int, std::string>(10, "ten"));
+    deque.push(BoundingPair<int, std::string>(20, "twenty"));
+    deque.push(BoundingPair<int, std::string>(5, "five"));
 
-    ASSERT_EQ(heap.top().second, "one");
-    ASSERT_EQ(heap.size(), 3);
-    heap.push(BoundingPair<int, std::string>(5, "five")); // Should not change the heap
-    ASSERT_EQ(heap.size(), 3);
-    ASSERT_EQ(heap.pop().second, "one");
-    ASSERT_EQ(heap.pop().second, "two");
-    ASSERT_EQ(heap.pop().second, "three");
-    ASSERT_TRUE(heap.empty());
+    ASSERT_EQ(deque.top().second, "twenty");
+    ASSERT_EQ(deque.pop().second, "twenty");
+    ASSERT_EQ(deque.top().second, "ten");
 }
 
-TEST(BoundedHeapTest, EmptyHeap) {
-    BoundedMaxPriorityDeque<int, std::string> heap(2);
-    ASSERT_TRUE(heap.empty());
+TEST(BoundedDequeTest, OverflowBehavior) {
+    BoundedMinPriorityDeque<int, std::string> deque(3);
+    deque.push(BoundingPair<int, std::string>(4, "four"));
+    deque.push(BoundingPair<int, std::string>(1, "one"));
+    deque.push(BoundingPair<int, std::string>(3, "three"));
+    deque.push(BoundingPair<int, std::string>(2, "two"));  // Should push out "four"
+
+    ASSERT_EQ(deque.top().second, "one");
+    ASSERT_EQ(deque.size(), 3);
+    deque.push(BoundingPair<int, std::string>(5, "five")); // Should not change the deque
+    ASSERT_EQ(deque.size(), 3);
+    ASSERT_EQ(deque.pop().second, "one");
+    ASSERT_EQ(deque.pop().second, "two");
+    ASSERT_EQ(deque.pop().second, "three");
+    ASSERT_TRUE(deque.empty());
+}
+
+TEST(BoundedDequeTest, Emptydeque) {
+    BoundedMaxPriorityDeque<int, std::string> deque(2);
+    ASSERT_TRUE(deque.empty());
     try {
-        heap.top();
-        FAIL() << "Expected std::exception due to empty heap";
+        deque.top();
+        FAIL() << "Expected std::exception due to empty deque";
     } catch (const std::exception& e) {
         ASSERT_STREQ("Attempted to access top element of empty BoundedPriorityDeque", e.what());
     }
 }
 
-TEST(BoundedHeapTest, Merge) {
+TEST(BoundedDequeTest, Merge) {
     BoundedMinPriorityDeque<int, std::string> a(5), b(5);
     a.emplace(2, "two");
     a.emplace(5, "five");

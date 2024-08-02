@@ -7,170 +7,130 @@
 
 #include "BoundingPair.h"
 #include <vector>
-#include <utility>
-#include <memory>
-#include <mutex>
-#include <functional>
-#include <algorithm>
-#include <set>
-
-#ifdef ENABLE_DEBUG
 #include <stdexcept>
-#endif
 
 template<typename K, typename V>
 class BoundedPriorityDequeBase {
 protected:
-    struct Node {
-        BoundingPair<K, V> _data;
-        Node* _prev;
-        Node* _next;
+    std::vector<BoundingPair<K, V>> _buffer;
+    size_t _k, _size = 0, _head = 0, _tail = 0;
 
-        explicit Node(const BoundingPair<K, V>& pair) : _data(pair), _prev(nullptr), _next(nullptr) {}
-    };
+    virtual bool compare(K a, K b) const = 0;
 
-    Node* _head;
-    Node* _tail;
-    std::set<Node*, std::function<bool(const Node* a, const Node* b)>> _index;
-    size_t _k, _size;
+    [[nodiscard]] size_t nextIndex(size_t current) const { return (current + 1) % _k; }
 
-    virtual bool compareElements(K a, K b) const = 0;
+    [[nodiscard]] size_t prevIndex(size_t current) const { return (current + _k - 1) % _k; }
+
+    size_t binarySearch(const BoundingPair<K, V>& target) const {
+        auto start = _head, end = _tail + 1;
+        while (start != end) {
+            size_t mid = (start + (end - start) / 2) % _buffer.size();
+            if (compare(_buffer[mid].first, target.first)) start = (mid + 1) % _buffer.size();
+            else end = mid;
+        }
+        return start;
+    }
 
 public:
-    explicit BoundedPriorityDequeBase(const std::function<bool(const Node* a, const Node* b)>& compare, unsigned int capacity = 0) :
-            _head(nullptr), _tail(nullptr),
-            _index(compare),
-            _k(capacity), _size(0) {}
+    explicit BoundedPriorityDequeBase(unsigned int capacity) : _buffer(capacity), _k(capacity) {}
 
     BoundingPair<K, V> top() const {
 #ifdef ENABLE_DEBUG
         if (empty()) throw std::runtime_error("Attempted to access top element of empty BoundedPriorityDeque");
 #endif
-        return _head->_data;
+        return _buffer[_head];
     }
 
     BoundingPair<K, V> bottom() const {
 #ifdef ENABLE_DEBUG
         if (empty()) throw std::runtime_error("Attempted to access bottom element of empty BoundedPriorityDeque");
 #endif
-        return _tail->_data;
+        return _buffer[_tail];
     }
 
-    K bottomK() const {
-#ifdef ENABLE_DEBUG
-        if (empty()) throw std::runtime_error("Attempted to access bottom element of empty BoundedPriorityDeque");
-#endif
-        return _tail->_data.first;
+    void push(const BoundingPair<K, V>& element) {
+        if (_size == _k) {
+            if (compare(element.first, _buffer[_tail].first)) popBottom();
+            else return;
+        } else if (_size == 0) {
+            _buffer[0] = element;
+            _head = 0;
+            _tail = 0;
+            _size = 1;
+            return;
+        }
+
+        auto pos = binarySearch(element);
+
+        if (pos != nextIndex(_tail)) {
+            if (_head <= _tail) {
+                if (_head > 0) {
+                    std::move(_buffer.begin() + _head, _buffer.begin() + pos + 1, _buffer.begin() + pos + 2);
+                } else if (_tail < _k - 1) {
+                    std::move_backward(_buffer.begin() + pos, _buffer.begin() + _tail + 1, _buffer.begin() + _tail + 2);
+                }
+            } else {
+                if (pos > 0) {
+                    std::move_backward(_buffer.begin() + pos, _buffer.begin() + _tail + 1, _buffer.begin() + _tail + 2);
+                } else {
+                    std::move(_buffer.begin() + _head, _buffer.begin() + pos + 1, _buffer.begin() + _head - 1);
+                }
+            }
+        }
+        _buffer[pos] = element;
+        _tail = nextIndex(_tail);
+        _size++;
     }
 
     BoundingPair<K, V> pop() {
 #ifdef ENABLE_DEBUG
         if (empty()) throw std::runtime_error("Attempted to pop from empty BoundedPriorityDeque");
 #endif
-        auto topElement = _head;
-
-        if (_size > 1) {
-            _head = topElement->_next;
-            _head->_prev = _tail;
-            _tail->_next = _head;
-        } else {
-            _head = nullptr;
-            _tail = nullptr;
-        }
-
-        _index.erase(topElement);
-        BoundingPair<K, V> data = topElement->_data;
-        delete topElement;
-        --_size;
-
-        return data;
+        BoundingPair<K, V> result = _buffer[_head];
+        _head = nextIndex(_head);
+        _size--;
+        return result;
     }
 
     BoundingPair<K, V> popBottom() {
 #ifdef ENABLE_DEBUG
         if (empty()) throw std::runtime_error("Attempted to pop from empty BoundedPriorityDeque");
 #endif
-        auto bottomElement = _tail;
-
-        if (_size > 1) {
-            _tail = bottomElement->_prev;
-            _tail->_next = _head;
-            _head->_prev = _tail;
-        } else {
-            _head = nullptr;
-            _tail = nullptr;
-        }
-
-        _index.erase(bottomElement);
-        BoundingPair<K, V> data = bottomElement->_data;
-        delete bottomElement;
-        --_size;
-
-        return data;
+        BoundingPair<K, V> result = _buffer[_tail];
+        _tail = prevIndex(_tail);
+        _size--;
+        return result;
     }
 
-    void push(const BoundingPair<K, V>& element) {
-        Node* newNode = new Node(element);
-
-        auto insertAsNewHead = [&] {
-            newNode->_next = _head;
-            newNode->_prev = _tail;
-            _head->_prev = newNode;
-            _tail->_next = newNode;
-            _head = newNode;
-        };
-
-        auto insertAsNewTail = [&] {
-            newNode->_prev = _tail;
-            newNode->_next = _head;
-            _tail->_next = newNode;
-            _head->_prev = newNode;
-            _tail = newNode;
-        };
-
-        auto insertInMiddle = [&](Node* it) {
-            newNode->_next = it;
-            newNode->_prev = it->_prev;
-            it->_prev->_next = newNode;
-            it->_prev = newNode;
-        };
-
-        if (!_head) {
-            _head = _tail = newNode;
-            _head->_next = _head;
-            _head->_prev = _head;
-        } else {
-            auto it = _index.lower_bound(newNode);
-            if (it == _index.begin()) insertAsNewHead();
-            else if (it == _index.end()) insertAsNewTail();
-            else insertInMiddle(*it);
-        }
-
-        _index.insert(newNode);
-        ++_size;
-        if (_size > _k) popBottom();
+    void emplace(K key, const V& value) {
+        BoundingPair<K, V> element(key, value);
+        push(element);
     }
-
-    void emplace(K key, const V& value) { push(BoundingPair<K, V>(key, value)); }
 
     void operator+=(const BoundedPriorityDequeBase<K, V>& rhs) {
-        if (rhs.empty()) return;
-        auto currNode = rhs._head;
-        do {
-            if (_size == _k && !compareElements(currNode->_data.first, bottomK())) break;
-            push(currNode->_data);
-            currNode = currNode->_next;
-        } while (currNode != rhs._head);
+        for (size_t i = 0; i < rhs._size; ++i) {
+            size_t index = (rhs._head + i) % rhs._k;
+            if (_size == _k && compare(bottom().first, rhs._buffer[index].first)) return;
+            push(rhs._buffer[index]);
+        }
     }
 
-    void clear() { while (_size > 0) pop(); }
-    [[nodiscard]] unsigned int size() const { return _size; }
-    [[nodiscard]] unsigned int capacity() const { return _k; }
+    void clear() {
+        _head = 0;
+        _tail = 0;
+        _size = 0;
+    }
+
+    [[nodiscard]] size_t size() const { return _size; }
+    [[nodiscard]] size_t capacity() const { return _k; }
     [[nodiscard]] bool empty() const { return _size == 0; }
     [[nodiscard]] bool full() const { return _size == _k; }
 
-    void setCapacity(unsigned int k) { _k = k; }
+    void setCapacity(unsigned int k) {
+        _k = k;
+        _buffer.resize(k);
+        clear();
+    }
 };
 
-#endif //SERVER_BOUNDED_PRIORITY_DEQUE_BASE_H
-
+#endif // SERVER_BOUNDED_PRIORITY_DEQUE_BASE_H
