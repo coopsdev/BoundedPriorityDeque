@@ -6,67 +6,50 @@
 #define SERVER_BOUNDED_PRIORITY_DEQUE_BASE_H
 
 #include <vector>
-#include <utility>
 #include <type_traits>
+#include <cassert>
 
 #ifdef ENABLE_DEBUG
 #include <stdexcept>
 #endif
 
-// Helper type traits to check if a type has a comparison operator
-template <typename, typename T>
-struct has_comparison_operator {
-    static_assert(
-            std::integral_constant<T, false>::value,
-            "Second template parameter needs to be of function type.");
-};
+// type trait to detect comparison operator
+template <typename T>
+class has_comparison_operator {
+    template <typename U, typename = decltype(std::declval<U>()(std::declval<const T&>(), std::declval<const T&>()))>
+    static std::true_type check(U*);
 
-template <typename C, typename Ret, typename... Args>
-struct has_comparison_operator<C, Ret(Args...)> {
-private:
-    template <typename T>
-    static constexpr auto check(T*) ->
-    typename std::is_same<decltype(std::declval<T>().operator()(std::declval<Args>()...)), Ret>::type;
-
-    template <typename>
-    static constexpr std::false_type check(...);
-
-    typedef decltype(check<C>(0)) type;
+    static std::false_type check(...);
 
 public:
-    static constexpr bool value = type::value;
+    static constexpr bool value = decltype(check(std::declval<T*>()))::value;
 };
 
 template <typename T>
-constexpr bool has_comparison_operator_v = has_comparison_operator<T, bool(const T&, const T&)>::value;
+inline constexpr bool has_comparison_operator_v = has_comparison_operator<T>::value;
 
 // BoundingPair class template
 template<typename K, typename V, typename Enable = void>
-class BoundingPair : public std::pair<K, V> {
-    using pair = std::pair<K, V>;
+class BoundingPair {
 public:
-    using pair::pair;
-    using pair::first;
-    using pair::second;
+    K key;
+    V value;
 
-    // Comparison operator
     bool operator<(const BoundingPair& other) const {
-        return first < other.first;
+        return this->key < other.key;
     }
 };
 
 // Specialization for comparator objects
 template<typename K, typename V>
 class BoundingPair<K, V, std::enable_if_t<has_comparison_operator_v<K>>> : public std::pair<K, V> {
-    using pair = std::pair<K, V>;
 public:
-    using pair::pair;
-    using pair::first;
-    using pair::second;
+    K key;
+    V value;
 
-    // Comparison operator using the comparator
     bool operator<(const BoundingPair& other) const {
-        return K()(first, other.first);
+        K comparator;
+        return comparator(this->key, other.key);
     }
 };
 
@@ -86,7 +69,7 @@ protected:
         auto start = _head, end = _tail + 1;
         while (start != end) {
             size_t mid = (start + (end - start) / 2) % _buffer.size();
-            if (compare(_buffer[mid].first, target.first)) start = (mid + 1) % _buffer.size();
+            if (compare(_buffer[mid].key, target.key)) start = (mid + 1) % _buffer.size();
             else end = mid;
         }
         return start;
@@ -109,16 +92,16 @@ public:
         return _buffer[_tail];
     }
 
-    [[nodiscard]] K& bottomK() const {
+    [[nodiscard]] K bottomK() const {
 #ifdef ENABLE_DEBUG
         if (empty()) throw std::runtime_error("Attempted to access bottom element of empty BoundedPriorityDeque");
 #endif
-        return _buffer[_tail].first;
+        return _buffer[_tail].key;
     }
 
     void push(const BoundingPair<K, V>& element) {
         if (_size == _k) {
-            if (compare(element.first, _buffer[_tail].first)) popBottom();
+            if (compare(element.key, _buffer[_tail].key)) popBottom();
             else return;
         } else if (_size == 0) {
             _buffer[0] = element;
@@ -169,7 +152,7 @@ public:
     void operator+=(const BoundedPriorityDequeBase<K, V>& rhs) {
         for (size_t i = 0; i < rhs._size; ++i) {
             size_t index = (rhs._head + i) % rhs._k;
-            if (_size == _k && compare(bottom().first, rhs._buffer[index].first)) return;
+            if (_size == _k && compare(bottom().key, rhs._buffer[index].key)) return;
             push(rhs._buffer[index]);
         }
     }

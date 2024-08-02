@@ -22,7 +22,7 @@ TEST(DequeTest, OneItemCapacity) {
     deque.emplace(2, "two");
     deque.emplace(1, "one");
 
-    ASSERT_EQ(deque.pop().second, "one");
+    ASSERT_EQ(deque.pop().value, "one");
 }
 
 TEST(MinDequeTest, BasicOperations) {
@@ -31,10 +31,10 @@ TEST(MinDequeTest, BasicOperations) {
     deque.push(BoundingPair<int, std::string>(20, "twenty"));
     deque.push(BoundingPair<int, std::string>(5, "five"));
 
-    ASSERT_EQ(deque.top().second, "five");
-    ASSERT_EQ(deque.pop().second, "five");
-    ASSERT_EQ(deque.top().second, "ten");
-    ASSERT_TRUE(deque.pop().second == "ten");
+    ASSERT_EQ(deque.top().value, "five");
+    ASSERT_EQ(deque.pop().value, "five");
+    ASSERT_EQ(deque.top().value, "ten");
+    ASSERT_TRUE(deque.pop().value == "ten");
     ASSERT_TRUE(deque.empty());
 }
 
@@ -44,10 +44,10 @@ TEST(MaxDequeTest, BasicOperations) {
     deque.push(BoundingPair<int, std::string>(20, "twenty"));
     deque.push(BoundingPair<int, std::string>(5, "five"));
 
-    ASSERT_EQ(deque.top().second, "twenty");
-    ASSERT_EQ(deque.pop().second, "twenty");
-    ASSERT_EQ(deque.top().second, "ten");
-    ASSERT_EQ(deque.pop().second, "ten");
+    ASSERT_EQ(deque.top().value, "twenty");
+    ASSERT_EQ(deque.pop().value, "twenty");
+    ASSERT_EQ(deque.top().value, "ten");
+    ASSERT_EQ(deque.pop().value, "ten");
     ASSERT_TRUE(deque.empty());
 }
 
@@ -57,9 +57,9 @@ TEST(BoundedDequeTest, CustomComparator) {
     deque.push(BoundingPair<int, std::string>(20, "twenty"));
     deque.push(BoundingPair<int, std::string>(5, "five"));
 
-    ASSERT_EQ(deque.top().second, "twenty");
-    ASSERT_EQ(deque.pop().second, "twenty");
-    ASSERT_EQ(deque.top().second, "ten");
+    ASSERT_EQ(deque.top().value, "twenty");
+    ASSERT_EQ(deque.pop().value, "twenty");
+    ASSERT_EQ(deque.top().value, "ten");
 }
 
 TEST(BoundedDequeTest, OverflowBehavior) {
@@ -69,13 +69,13 @@ TEST(BoundedDequeTest, OverflowBehavior) {
     deque.push(BoundingPair<int, std::string>(3, "three"));
     deque.push(BoundingPair<int, std::string>(2, "two"));  // Should push out "four"
 
-    ASSERT_EQ(deque.top().second, "one");
+    ASSERT_EQ(deque.top().value, "one");
     ASSERT_EQ(deque.size(), 3);
     deque.push(BoundingPair<int, std::string>(5, "five")); // Should not change the deque
     ASSERT_EQ(deque.size(), 3);
-    ASSERT_EQ(deque.pop().second, "one");
-    ASSERT_EQ(deque.pop().second, "two");
-    ASSERT_EQ(deque.pop().second, "three");
+    ASSERT_EQ(deque.pop().value, "one");
+    ASSERT_EQ(deque.pop().value, "two");
+    ASSERT_EQ(deque.pop().value, "three");
     ASSERT_TRUE(deque.empty());
 }
 
@@ -103,11 +103,11 @@ TEST(BoundedDequeTest, Merge) {
     b.emplace(4, "four");
 
     a += b;
-    ASSERT_EQ(a.pop().second, "one");
-    ASSERT_EQ(a.pop().second, "two");
-    ASSERT_EQ(a.pop().second, "three");
-    ASSERT_EQ(a.pop().second, "four");
-    ASSERT_EQ(a.pop().second, "five");
+    ASSERT_EQ(a.pop().value, "one");
+    ASSERT_EQ(a.pop().value, "two");
+    ASSERT_EQ(a.pop().value, "three");
+    ASSERT_EQ(a.pop().value, "four");
+    ASSERT_EQ(a.pop().value, "five");
     ASSERT_TRUE(a.empty());
 }
 
@@ -156,7 +156,7 @@ protected:
 //    // Verify the consistency and integrity of the deque
 //    std::vector<int> values;
 //    while (!deque.empty()) {
-//        std::string topValue = deque.top().second;
+//        std::string topValue = deque.top().value;
 //        values.push_back(std::stoi(topValue.substr(7))); // Extract the number from the string
 //        deque.pop();
 //    }
