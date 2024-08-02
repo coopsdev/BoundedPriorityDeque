@@ -11,7 +11,7 @@ class Pkg(ConanFile):
     license = "MIT"
     author = "Cooper Larson | cooper.larson1@gmail.com"
     url = ""
-    description = ("A lightweight, performant, header-only bounded-priority-deque"
+    description = ("A lightweight & performant, single-header bounded-priority-deque"
                    " that supports: { min, max, custom-comparator }.")
     topics = ("c++", "data structures", "algorithms", "performance")
     settings = "os", "compiler", "arch", "build_type"

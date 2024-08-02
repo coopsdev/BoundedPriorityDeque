@@ -12,17 +12,21 @@
 #endif
 
 /**
- * @file BoundedPriorityDequeBase.h
+ * @file BoundedPriorityDeque.hpp
  * @brief Provides a framework for a bounded priority deque with customizable comparison mechanisms.
  *
- * Defines several template classes for implementing a bounded priority deque that supports both min and max oriented operations with customizable comparison. It includes mechanisms to handle capacity and size management, as well as utility functions for element access and manipulation.
+ * Defines several template classes for implementing a bounded priority deque that supports
+ * both min and max oriented operations with customizable comparison.
+ * It includes mechanisms to handle capacity and size management,
+ * as well as utility functions for element access and manipulation.
  */
 
 /**
  * @class has_comparison_operator
  * @brief Type trait to detect the presence of a comparison operator in types.
  *
- * This type trait checks if a given type T has a comparison operator defined. It is primarily used to enable specialization based on the availability of this operator.
+ * This type trait checks if a given type T has a comparison operator defined.
+ * It is primarily used to enable specialization based on the availability of this operator.
  *
  * @tparam T The type to check for a comparison operator.
  */
@@ -107,9 +111,9 @@ protected:
     /**
      * @brief Efficiently locates the optimal insertion index in O(log n) time complexity.
      *
-     * Performs binary search in class O(log n) time, adapted for a circular buffer with modulo arithmetic.
+     * Performs binary search & locates insertion index in O(log n) time, adapted for a circular buffer with modulo arithmetic.
      *
-     * @param target
+     * @param target The element to be inserted.
      * @return
      */
     size_t binarySearch(const BoundingPair<K, V>& target) const {
@@ -126,7 +130,7 @@ public:
     /**
      * The only constructor with default capacity == 0.
      *
-     * @param capacity
+     * @param capacity The initially set bounding capacity of the data structure (see setCapacity(k) for more...).
      */
     explicit BoundedPriorityDequeBase(size_t capacity = 0) : _buffer(capacity), _k(capacity) {}
 
@@ -249,7 +253,7 @@ public:
     void emplace(K key, const V& value) { push({ key, value }); }
 
     /**
-     * @brief Merges another BoundedPriorityDeque instance into the calling buffer.
+     * @brief Merges another BoundedPriorityDeque instance into the calling instance.
      *
      * Compares the incoming dequeues next value to 'this' dequeues lowest-priority elements key,
      * terminates search early when the other buffers top element is lower-priority than 'this' bottom element.
@@ -295,14 +299,16 @@ public:
 
     /**
      *
-     * @return True if the dequeue is full (ie. size == capacity).
+     * @return True if the dequeue is full, else False.
      */
     [[nodiscard]] bool full() const { return _size == _k; }
 
     /**
      * @brief Updates the capacity.
      *
-     * Sets new capacity, resizes buffer with new allocations, then resets the buffer to default params.
+     * Sets new capacity
+     * Resizes buffer with new allocations
+     * then resets the buffer to default params.
      *
      * @param k The new capacity.
      */
@@ -358,7 +364,7 @@ public:
  * The custom-comparator should be in the form of a function<bool(K a, K b)> comparator which returns
  * true if 'a' has a higher-priority than 'b'.
  *
- * @tparam K Arithmetic type of the key.
+ * @tparam K Comparator support type of the key.
  * @tparam V Type of the value.
  */
 template<typename K, typename V, typename Comparator = std::less<K>>
