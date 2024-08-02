@@ -37,7 +37,7 @@ jobs:
 
       - name: Compile and Link
         run: |
-          conan build . -pr:a vps-release --build=missing
+          conan build . -pr:a vps-debug --build=missing
 
       - name: Show ccache stats after build
         run: ccache -s
