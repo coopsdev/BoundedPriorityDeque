@@ -8,7 +8,7 @@ on:
 
 jobs:
   package-and-upload:
-    runs-on: [self-hosted, Linux, X64, ubuntu-latest]
+    runs-on: [self-hosted, Linux, X64, ubuntu-latest-lts]
 
     steps:
       - uses: actions/checkout@v4
