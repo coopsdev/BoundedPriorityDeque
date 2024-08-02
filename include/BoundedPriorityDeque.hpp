@@ -114,7 +114,7 @@ protected:
      * Performs binary search & locates insertion index in O(log n) time, adapted for a circular buffer with modulo arithmetic.
      *
      * @param target The element to be inserted.
-     * @return
+     * @return The optimal insertion index for the targeted insertion element.
      */
     size_t binarySearch(const BoundingPair<K, V>& target) const {
         auto start = _head, end = _tail + 1;
@@ -359,12 +359,12 @@ public:
  * @class BoundedPriorityDeque
  * @brief Lightweight custom-comparator priority dequeue
  *
- * This class provides a lightweight minimum priority implement of the base class.
+ * This class provides a lightweight custom-comparator implement of the base class.
  * This derived class allows for non-standard or non-arithmetic key types via a custom-comparator template argument.
  * The custom-comparator should be in the form of a function<bool(K a, K b)> comparator which returns
  * true if 'a' has a higher-priority than 'b'.
  *
- * @tparam K Comparator support type of the key.
+ * @tparam K Template-comparator compatible key Type.
  * @tparam V Type of the value.
  */
 template<typename K, typename V, typename Comparator = std::less<K>>
