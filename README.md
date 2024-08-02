@@ -1,4 +1,4 @@
-# Bounded Priority Deque
+# BoundedPriorityDeque.hpp
 
 A highly efficient, single-header C++ library implementing a bounded priority deque with a focus on performance and versatility through templating. This library utilizes a circular buffer, chosen for its robust performance characteristics.
 
