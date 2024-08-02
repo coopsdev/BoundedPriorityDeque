@@ -7,10 +7,7 @@
 #include <random>
 #include <vector>
 #include <algorithm>
-#include "include/BoundingPair.h"
-#include "include/BoundedMinPriorityDeque.h"
-#include "include/BoundedMaxPriorityDeque.h"
-#include "include/BoundedPriorityDeque.h"
+#include "include/BoundedPriorityDeque.hpp"
 
 TEST(BoundingPairTest, Comparison) {
     BoundingPair<int, std::string> pair1(10, "ten");

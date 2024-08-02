@@ -1,6 +1,8 @@
+import os
+
 from conan import ConanFile
 from conan.tools.meson import Meson
-from conan.tools.files import copy
+from conan.tools.files import copy, save
 
 
 class Pkg(ConanFile):
@@ -36,7 +38,7 @@ class Pkg(ConanFile):
         meson.test()
 
     def package(self):
-        copy(self, "*.h", self.source_folder, self.package_folder)
+        copy(self, "*.hpp", self.source_folder, self.package_folder)
 
     def package_info(self):
         self.cpp_info.includedirs = ['include']
@@ -45,4 +47,21 @@ class Pkg(ConanFile):
 
     def package_id(self):
         self.info.clear()
+
+    def merge_headers(self, filepath1, filepath2, output_filename):
+        # Read files
+        with open(filepath1, 'r') as f1, open(filepath2, 'r') as f2:
+            content1 = f1.read()
+            content2 = f2.read()
+
+        # Create combined header content with include guards
+        guard_name = output_filename.upper().replace('.', '_') + '_HPP'
+        combined_content = f'#ifndef {guard_name}\n#define {guard_name}\n\n'
+        combined_content += content1 + '\n' + content2
+        combined_content += f'\n#endif // {guard_name}\n'
+
+        # Write to build directory
+        build_path = os.path.join(self.build_folder, output_filename)
+        save(self, build_path, combined_content)
+        self.output.info(f"Merged header file created at: {build_path}")
 
