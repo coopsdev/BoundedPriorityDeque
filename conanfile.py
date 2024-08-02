@@ -5,7 +5,7 @@ from conan.tools.files import copy
 
 class Pkg(ConanFile):
     name = "bpd"
-    version = "0.2.0"
+    version = "0.2.1"
     license = "MIT"
     author = "Cooper Larson | cooper.larson1@gmail.com"
     url = ""
