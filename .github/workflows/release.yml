@@ -3,7 +3,7 @@ name: C++ CI Release
 on:
   release:
     types: [published] # run on release
-    branches: [main]
+    branches: [master]
 
 jobs:
   build-package:

@@ -2,7 +2,7 @@ name: C++ CI Push Main
 
 on:
   push:
-    branches: [main]
+    branches: [master]
 
 jobs:
   build-package:
