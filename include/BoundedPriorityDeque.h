@@ -9,18 +9,14 @@
 
 template<typename K, typename V, typename Comparator = std::less<K>>
 class BoundedPriorityDeque : public BoundedPriorityDequeBase<K, V> {
-    using Node = BoundedPriorityDequeBase<K, V>::Node;
-
 protected:
     Comparator comparator;
 
-    [[nodiscard]] bool compareElements(K a, K b) const override { return comparator(a, b); }
+    [[nodiscard]] bool compare(K a, K b) const override { return comparator(a, b); }
 
 public:
     explicit BoundedPriorityDeque(unsigned int capacity = 0, Comparator comp = Comparator()) :
-        BoundedPriorityDequeBase<K, V>(
-                [](const Node* a, const Node* b) { return Comparator()(a->_data.first, b->_data.first); },
-                    capacity), comparator(comp) {}
+        BoundedPriorityDequeBase<K, V>(capacity), comparator(comp) {}
 
 };
 

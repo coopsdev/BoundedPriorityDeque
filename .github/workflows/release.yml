@@ -3,7 +3,7 @@ name: C++ CI Release
 on:
   release:
     types: [published] # run on release
-    branches: [main]
+    branches: [master]
 
 jobs:
   build-package:
@@ -45,8 +45,8 @@ jobs:
 
       - name: Create Package
         run: |
-          cd /home/gh-runner/actions-runner/_work/
-          conan create . -pr:a vps-release --test-folder="" --build=missing
+          /home/gh-runner/actions-runner/_work/BoundedPriorityDeque/BoundedPriorityDeque
+          conan create . -pr:a vps-release --build=missing
 
       - name: Upload Packages to Artifactory
         run: |

@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [ closed ]
     branches:
-      - main
+      - master
 
 jobs:
   package-and-upload:
@@ -36,8 +36,8 @@ jobs:
 
       - name: Package
         run: |
-          cd /home/gh-runner/actions-runner/_work/TSP/TSP
-          conan create . -pr:a vps-release --test-folder="" --build=missing
+          cd /home/gh-runner/actions-runner/_work/BoundedPriorityDeque/BoundedPriorityDeque
+          conan create . -pr:a vps-release --build=missing
 
       - name: Upload Packages to Artifactory
         run: |

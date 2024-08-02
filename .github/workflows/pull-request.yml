@@ -2,7 +2,7 @@ name: C++ CI Build
 
 on:
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
   build-and-test:
@@ -37,14 +37,12 @@ jobs:
 
       - name: Compile and Link
         run: |
-          conan build . -pr:a vps-release --build=missing
+          conan build . -pr:a vps-debug --build=missing
 
       - name: Show ccache stats after build
         run: ccache -s
 
       - name: Run Tests
-        env:
-          PATH_TO_TSP_TEST_DATA: /home/gh-runner/actions-runner/_work/TSP/TSP/resources/testData
         run: |
-          echo "Using test data path $PATH_TO_TSP_TEST_DATA"
-          ./build/meson/runTests
+          cd /home/gh-runner/actions-runner/_work/BoundedPriorityDeque/BoundedPriorityDeque
+          ./build/meson/testDeque
