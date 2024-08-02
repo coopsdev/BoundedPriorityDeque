@@ -43,8 +43,5 @@ jobs:
         run: ccache -s
 
       - name: Run Tests
-        env:
-          PATH_TO_TSP_TEST_DATA: /home/gh-runner/actions-runner/_work/TSP/TSP/resources/testData
         run: |
-          echo "Using test data path $PATH_TO_TSP_TEST_DATA"
-          ./build/meson/runTests
+          ./build/meson/testDeque
