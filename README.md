@@ -6,6 +6,8 @@ A highly efficient, single-header C++ library implementing a bounded priority de
 
 This project is currently in active development and is subject to significant changes. However, a stable release is anticipated in the near future.
 
+[Early Release Documentation](https://bounded-priority-deque.cooperhlarson.com)
+
 ## Motivation
 
 The bounded priority deque addresses a notable gap in the standard C++ library and fills a niche not currently catered to by lightweight libraries available on major C++ package managers such as Conan. This project emerged from complex requirements in multi-threaded ball tree constructions and Traveling Salesman Problem (TSP) solution optimizations.
