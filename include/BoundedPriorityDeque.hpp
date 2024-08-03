@@ -117,7 +117,8 @@ protected:
      * @return The optimal insertion index for the targeted insertion element.
      */
     size_t binarySearch(const BoundingPair<K, V>& target) const {
-        auto start = _head, end = _tail + 1;
+        auto start = _head;
+        auto end = _head + _size;
         while (start != end) {
             size_t mid = (start + (end - start) / 2) % _buffer.size();
             if (compare(_buffer[mid].key, target.key)) start = (mid + 1) % _buffer.size();
@@ -200,13 +201,8 @@ public:
 
         auto pos = binarySearch(element);
         if (pos != nextIndex(_tail)) {
-            if (_head <= _tail) {
-                if (_head > 0) std::move(_buffer.begin() + _head, _buffer.begin() + pos + 1, _buffer.begin() + pos + 2);
-                else std::move_backward(_buffer.begin() + pos, _buffer.begin() + _tail + 1, _buffer.begin() + _tail + 2);
-            } else {
-                if (pos > 0) std::move_backward(_buffer.begin() + pos, _buffer.begin() + _tail + 1, _buffer.begin() + _tail + 2);
-                else std::move(_buffer.begin() + _head, _buffer.begin() + pos + 1, _buffer.begin() + _head - 1);
-            }
+            if (_head > 0) std::move(_buffer.begin() + _head, _buffer.begin() + pos + 1, _buffer.begin() + _head + - 1);
+            else std::move_backward(_buffer.begin() + pos, _buffer.begin() + _tail + 1, _buffer.begin() + _tail + 2);
         }
 
         _buffer[pos] = element;
