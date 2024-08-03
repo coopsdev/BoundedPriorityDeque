@@ -168,16 +168,14 @@ protected:
 
 public:
     /**
-     * The only constructor with default capacity == 0.
+     * Constructor with default capacity == 0.
      *
-     * @param capacity The initially set bounding capacity of the data structure (see setCapacity(k) for more...).
+     * @param capacity The initially set bounding capacity of the data structure.
      */
     explicit BoundedPriorityDequeBase(size_t capacity = 0) : _buffer(capacity), _k(capacity) {}
 
     /**
      * @brief Get the highest-priority element.
-     *
-     * Gets the highest-priority (ie. lowest K / key value in BoundedMinPriorityDeque) element in the circular buffer.
      *
      * @return the BoundingPair at the head of the circular buffer.
      */
@@ -191,7 +189,7 @@ public:
     /**
      * @brief Get the lowest-priority element.
      *
-     * Gets the lowest-priority (next to be pruned) element at the tail of the circular buffer.
+     * Gets the next element to be pruned from the tail of the data structure.
      *
      * @return the BoundingPair at the tail of the circular buffer.
      */
@@ -296,8 +294,9 @@ public:
     /**
      * @brief Merges another BoundedPriorityDeque instance into the calling instance.
      *
-     * Compares the incoming dequeues next value to 'this' dequeues lowest-priority elements key,
+     * Compares the incoming dequeues next value to the calling dequeues lowest-priority elements key,
      * terminates search early when the other buffers top element is lower-priority than 'this' bottom element.
+     * Is non-destructive to the incoming dequeues data.
      *
      * @param rhs The BoundedPriorityDeque being merged into 'this' dequeue.
      */
@@ -314,7 +313,7 @@ public:
     /**
      * @brief clears and resets the data structure.
      *
-     * Resets the size and index pointers to there original values, no destructor calls for performance.
+     * Resets the size and index pointers to there original values. No destructor calls for performance.
      */
     void clear() {
         _head = 0;
