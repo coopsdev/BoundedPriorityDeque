@@ -42,3 +42,8 @@ jobs:
       - name: Upload Packages to Artifactory
         run: |
           conan upload "*" -r vps-local --confirm
+
+      - name: Generate & Publish Doxygen Documentation
+        run: |
+          cd /home/gh-runner/actions-runner/_work/BoundedPriorityDeque/BoundedPriorityDeque
+          doxygen Doxyfile
