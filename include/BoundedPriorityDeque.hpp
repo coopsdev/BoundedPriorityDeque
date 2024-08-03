@@ -109,7 +109,7 @@ protected:
     [[nodiscard]] size_t prevIndex(size_t current) const { return (current + _k - 1) % _k; }
 
     /**
-     * @brief Efficiently locates the optimal insertion index in O(log n) time complexity.
+     * @brief Efficiently locates the optimal insertion index.
      *
      * Performs binary search & locates insertion index in O(log n) time, adapted for a circular buffer with modulo arithmetic.
      *
@@ -117,13 +117,53 @@ protected:
      * @return The optimal insertion index for the targeted insertion element.
      */
     size_t binarySearch(const BoundingPair<K, V>& target) const {
-        auto start = _head, end = _tail + 1;
+        auto start = _head;
+        auto end = start + _size;
         while (start != end) {
-            size_t mid = (start + (end - start) / 2) % _buffer.size();
-            if (compare(_buffer[mid].key, target.key)) start = (mid + 1) % _buffer.size();
+            size_t mid = (start + (end - start) / 2) % _k;
+            if (compare(_buffer[mid].key, target.key)) start = (mid + 1) % _k;
             else end = mid;
         }
         return start;
+    }
+
+    /**
+     * @brief Inserts an element into the _buffer
+     *
+     * This is a utility method to allow shared insertion logic between the public push method
+     * and the operator+=() code, the latter of which needed a way to terminate the loop without
+     * running redundant capacity checks, so this function is essentially protection free (think overwriting
+     * the circular buffer) insertion, popping from the bottom if capacity is to be exceeded must be handled
+     * by the programmer in this case.
+     *
+     * @param element
+     */
+    void insert(const BoundingPair<K, V>& element) {
+        if (_size == 0) {
+            _buffer[0] = element;
+            _head = 0;
+            _tail = 0;
+            _size = 1;
+            return;
+        }
+
+        auto index = binarySearch(element);
+        if (index != nextIndex(_tail)) {
+            if (_head > 0) std::move(_buffer.begin() + _head, _buffer.begin() + index + 1, _buffer.begin() + _head + - 1);
+            else std::move_backward(_buffer.begin() + index, _buffer.begin() + _tail + 1, _buffer.begin() + _tail + 2);
+        }
+
+        _buffer[index] = element;
+        _tail = nextIndex(_tail);
+        ++_size;
+    }
+
+    /**
+     * @brief Internal method with no return val
+     */
+    void _popBottom() {
+        _tail = prevIndex(_tail);
+        --_size;
     }
 
 public:
@@ -162,6 +202,13 @@ public:
         return _buffer[_tail];
     }
 
+    [[nodiscard]] K topK() const {
+#ifdef ENABLE_DEBUG
+        if (empty()) throw std::runtime_error("Attempted to access bottom element of empty BoundedPriorityDeque");
+#endif
+        return _buffer[_head].key;
+    }
+
     /**
      * @brief Get the key from the lowest-priority element.
      *
@@ -177,6 +224,14 @@ public:
     }
 
     /**
+     * @brief constructs a BoundingPair<K, V> element and inserts it.
+     *
+     * @param key The bounding key value
+     * @param value The data held by the bounding pair.
+     */
+    void emplace(K key, const V& value) { push({ key, value }); }
+
+    /**
      * @brief Inserts an element into the vector.
      *
      * Pops bottom element to make room if necessary.
@@ -190,28 +245,22 @@ public:
         if (_size == _k) {
             if (compare(element.key, _buffer[_tail].key)) popBottom();
             else return;
-        } else if (_size == 0) {
-            _buffer[0] = element;
-            _head = 0;
-            _tail = 0;
-            _size = 1;
-            return;
         }
+        insert(element);
+    }
 
-        auto pos = binarySearch(element);
-        if (pos != nextIndex(_tail)) {
-            if (_head <= _tail) {
-                if (_head > 0) std::move(_buffer.begin() + _head, _buffer.begin() + pos + 1, _buffer.begin() + pos + 2);
-                else std::move_backward(_buffer.begin() + pos, _buffer.begin() + _tail + 1, _buffer.begin() + _tail + 2);
-            } else {
-                if (pos > 0) std::move_backward(_buffer.begin() + pos, _buffer.begin() + _tail + 1, _buffer.begin() + _tail + 2);
-                else std::move(_buffer.begin() + _head, _buffer.begin() + pos + 1, _buffer.begin() + _head - 1);
-            }
-        }
-
-        _buffer[pos] = element;
-        _tail = nextIndex(_tail);
-        _size++;
+    /**
+     * @brief random accessor relative to the top of the deque.
+     *
+     * This accessor has a lot of uses. It primarily exists to facilitate efficient merges
+     * in operator+=() without removing const protections, but also could be useful for random access
+     * to the i-th element offset from the top, ie the 4th highest-priority item in O(1) time.
+     *
+     * @param offsetTop The unsigned long offset from the top element.
+     * @return The BoundingPair<K, V> element offset from the top of deque.
+     */
+    BoundingPair<K, V> operator[](size_t offsetTop) const {
+        return _buffer[_head <= _tail ? _head + offsetTop : (_head + offsetTop) % _k];
     }
 
     /**
@@ -223,10 +272,10 @@ public:
 #ifdef ENABLE_DEBUG
         if (empty()) throw std::runtime_error("Attempted to pop from empty BoundedPriorityDeque");
 #endif
-        BoundingPair<K, V> result = _buffer[_head];
+        auto index = _head;
         _head = nextIndex(_head);
         --_size;
-        return result;
+        return _buffer[index];
     }
 
     /**
@@ -238,19 +287,11 @@ public:
 #ifdef ENABLE_DEBUG
         if (empty()) throw std::runtime_error("Attempted to pop from empty BoundedPriorityDeque");
 #endif
-        BoundingPair<K, V> result = _buffer[_tail];
+        auto index = _tail;
         _tail = prevIndex(_tail);
         --_size;
-        return result;
+        return _buffer[index];
     }
-
-    /**
-     * @brief constructs a BoundingPair<K, V> element and inserts it.
-     *
-     * @param key The bounding key value
-     * @param value The data held by the bounding pair.
-     */
-    void emplace(K key, const V& value) { push({ key, value }); }
 
     /**
      * @brief Merges another BoundedPriorityDeque instance into the calling instance.
@@ -261,10 +302,12 @@ public:
      * @param rhs The BoundedPriorityDeque being merged into 'this' dequeue.
      */
     void operator+=(const BoundedPriorityDequeBase<K, V>& rhs) {
-        for (size_t i = 0; i < rhs._size; ++i) {
-            size_t index = (rhs._head + i) % rhs._k;
-            if (_size == _k && compare(bottom().key, rhs._buffer[index].key)) return;
-            push(rhs._buffer[index]);
+        for (size_t i = 0; i < rhs.size(); ++i) {
+            if (_size == _k) {
+                if (compare(rhs[i].key, bottomK())) _popBottom();
+                else return;
+            }
+            insert(rhs[i]);
         }
     }
 
@@ -304,18 +347,26 @@ public:
     [[nodiscard]] bool full() const { return _size == _k; }
 
     /**
-     * @brief Updates the capacity.
+     * @brief Sets the capacity and restores clean state.
      *
-     * Sets new capacity
-     * Resizes buffer with new allocations
-     * then resets the buffer to default params.
+     * Updates the capacity, then restores the _head of the _buffer back to index 0
+     * leaving the buffer in a contiguous fresh state. This preserves the integrity
+     * of the data when shrinking the buffer.
      *
      * @param k The new capacity.
      */
-    void setCapacity(unsigned int k) {
+    void resize(size_t k) {
         _k = k;
-        _buffer.resize(k);
-        clear();
+        if (_head <= _tail) {
+            if (_head > 0) std::move(_buffer.begin() + _head, _buffer.begin() + _tail + 1, _buffer.begin());
+            _buffer.resize(_k);
+        }
+        else {
+            std::vector<BoundingPair<K, V>> newBuffer(_k);
+            std::move(_buffer.begin() + _head, _buffer.end() + 1, newBuffer.begin());
+            std::move(_buffer.begin(), _buffer.begin() + _tail + 1, newBuffer.begin() + (_k - _head - 1));
+            _buffer = newBuffer;
+        }
     }
 };
 
