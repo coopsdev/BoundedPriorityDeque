@@ -67,7 +67,7 @@ public:
  * @class BoundingPair
  * @brief Specialization of BoundingPair for types with a custom comparison operator.
  *
- * Inherits from std::pair and uses a custom comparator for ordering.
+ * Uses a custom comparator for ordering.
  *
  * @tparam K The key type.
  * @tparam V The value type.
@@ -85,7 +85,8 @@ public:
  * @class BoundedPriorityDequeBase
  * @brief Base class for implementing a bounded priority deque.
  *
- * This class provides the basic functionalities of a bounded deque with methods for pushing, popping, and accessing elements while maintaining a defined capacity.
+ * This class provides the basic functionalities of a bounded deque with methods for
+ * pushing, popping, and accessing elements while maintaining a defined capacity.
  *
  * @tparam K Type of the key.
  * @tparam V Type of the value.
@@ -105,13 +106,27 @@ protected:
      */
     virtual bool compare(K a, K b) const = 0;
 
+    /**
+     * @brief Provides fast access to the next index of a given insertion position.
+     *
+     * @param current The index queried for next index
+     * @return The next index with circular wrap-around
+     */
     [[nodiscard]] size_t nextIndex(size_t current) const { return (current + 1) % _k; }
+
+    /**
+     * @brief Provides fast access to the previous index of a given insertion position.
+     *
+     * @param current The index queried for previous index
+     * @return The previous index with circular wrap-around
+     */
     [[nodiscard]] size_t prevIndex(size_t current) const { return (current + _k - 1) % _k; }
 
     /**
      * @brief Efficiently locates the optimal insertion index.
      *
-     * Performs binary search & locates insertion index in O(log n) time, adapted for a circular buffer with modulo arithmetic.
+     * Performs binary insertion search and locates insertion index in O(log n) time,
+     * adapted for a circular buffer with modulo arithmetic. No handling of duplicate values.
      *
      * @param target The element to be inserted.
      * @return The optimal insertion index for the targeted insertion element.
@@ -132,9 +147,9 @@ protected:
      *
      * This is a utility method to allow shared insertion logic between the public push method
      * and the operator+=() code, the latter of which needed a way to terminate the loop without
-     * running redundant capacity checks, so this function is essentially protection free (think overwriting
-     * the circular buffer) insertion, popping from the bottom if capacity is to be exceeded must be handled
-     * by the programmer in this case.
+     * running redundant capacity checks, so this function is essentially protection free insertion (think
+     * overwriting elements in the circular buffer), popping from the bottom if capacity is to be exceeded
+     * must be handled by the programmer in this case.
      *
      * @param element
      */
@@ -168,7 +183,7 @@ protected:
 
 public:
     /**
-     * Constructor with default capacity == 0.
+     * @brief Primary constructor with default bounding capacity of zero.
      *
      * @param capacity The initially set bounding capacity of the data structure.
      */
@@ -200,6 +215,14 @@ public:
         return _buffer[_tail];
     }
 
+    /**
+     * @brief Get the key from the highest-priority element.
+     *
+     * Introduced to help with merging checks in operator+=, but useful for checking the top of the dequeues
+     * key if an optimization threshold is trying to be achieved.
+     *
+     * @return the lowest-priority elements key.
+     */
     [[nodiscard]] K topK() const {
 #ifdef ENABLE_DEBUG
         if (empty()) throw std::runtime_error("Attempted to access bottom element of empty BoundedPriorityDeque");
@@ -232,8 +255,7 @@ public:
     /**
      * @brief Inserts an element into the vector.
      *
-     * Pops bottom element to make room if necessary.
-     *
+     * If dequeue is at capacity and the insertion is valid, pops the bottom element.
      * If straightforward insertion not possible, uses binary search to find the insertion index,
      * then shifts the elements above or below the insertion index to make room for the item.
      *
@@ -350,7 +372,7 @@ public:
      *
      * Updates the capacity, then restores the _head of the _buffer back to index 0
      * leaving the buffer in a contiguous fresh state. This preserves the integrity
-     * of the data when shrinking the buffer.
+     * of the higher-priority data when shrinking the buffer.
      *
      * @param k The new capacity.
      */
