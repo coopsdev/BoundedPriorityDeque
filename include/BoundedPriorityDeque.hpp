@@ -387,6 +387,8 @@ public:
             std::move(_buffer.begin() + _head, _buffer.end() + 1, newBuffer.begin());
             std::move(_buffer.begin(), _buffer.begin() + _tail + 1, newBuffer.begin() + (_k - _head - 1));
             _buffer = newBuffer;
+            _head = 0;
+            _tail = _size - 1;
         }
     }
 };
