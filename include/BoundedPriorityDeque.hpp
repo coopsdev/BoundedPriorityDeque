@@ -149,7 +149,7 @@ protected:
 
         auto index = binarySearch(element);
         if (index != nextIndex(_tail)) {
-            if (_head > 0) std::move(_buffer.begin() + _head, _buffer.begin() + index + 1, _buffer.begin() + _head + - 1);
+            if (_head > 0) std::move(_buffer.begin() + _head, _buffer.begin() + index + 1, _buffer.begin() + _head - 1);
             else std::move_backward(_buffer.begin() + index, _buffer.begin() + _tail + 1, _buffer.begin() + _tail + 2);
         }
 
