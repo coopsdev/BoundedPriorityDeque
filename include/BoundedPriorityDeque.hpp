@@ -132,7 +132,7 @@ protected:
      * @return The optimal insertion index for the targeted insertion element.
      */
     size_t binarySearch(const BoundingPair<K, V>& target) const {
-        auto start = 0;
+        size_t start = 0;
         auto end = _size;
         while (start != end) {
             size_t mid = start + (end - start) / 2;
