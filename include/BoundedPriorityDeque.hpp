@@ -163,7 +163,10 @@ protected:
         }
 
         auto index = binarySearch(element);
-        if (index == nextIndex(_tail)) _tail = nextIndex(_tail);
+        if (index == nextIndex(_tail)) {
+            if (index == prevIndex(_head) && compare(element.key, topK())) _head = prevIndex(_head);
+            else _tail = nextIndex(_tail);
+        }
         else if (index == prevIndex(_head)) _head = prevIndex(_head);
         else if (_head <= _tail && _head > 0) {
             std::move(_buffer.begin() + _head, _buffer.begin() + index + 1, _buffer.begin() + _head - 1);
