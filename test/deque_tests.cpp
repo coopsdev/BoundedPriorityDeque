@@ -111,6 +111,70 @@ TEST(BoundedDequeTest, Merge) {
     ASSERT_TRUE(a.empty());
 }
 
+TEST(BoundedDequeTest, Resize) {
+    BoundedMinPriorityDeque<int, std::string> deque(5);
+    deque.emplace(2, "two");
+    deque.emplace(5, "five");
+    deque.emplace(7, "seven");
+    deque.emplace(12, "twelve");
+
+    auto two = deque.pop();
+    deque.resize(2);
+    ASSERT_EQ(deque.topK(), 5);
+    ASSERT_EQ(deque.bottomK(), 7);
+    deque.pop();
+
+    deque.resize(4);
+    deque.emplace(1, "one");
+    deque.emplace(3, "three");
+    deque.emplace(9, "nine");
+    deque.emplace(4, "four");
+    deque.push(two);
+    deque.resize(4);
+
+    ASSERT_EQ(deque.pop().value, "one");
+    ASSERT_EQ(deque.pop().value, "two");
+    ASSERT_EQ(deque.pop().value, "three");
+    ASSERT_EQ(deque.pop().value, "four");
+    ASSERT_TRUE(deque.empty());
+}
+
+TEST(BoundedDequeTest, ResizeCircular) {
+    // Initialize the buffer with a capacity of 5
+    BoundedMinPriorityDeque<int, std::string> deque(5);
+
+    // Fill the buffer
+    deque.emplace(5, "five");
+    deque.emplace(10, "ten");
+    deque.emplace(15, "fifteen");
+    deque.emplace(20, "twenty");
+    deque.emplace(25, "twenty-five");
+
+    // Pop three elements to move the head forward
+    ASSERT_EQ(deque.pop().value, "five");
+    ASSERT_EQ(deque.pop().value, "ten");
+    ASSERT_EQ(deque.pop().value, "fifteen");
+
+    // Check current state of the deque
+    ASSERT_EQ(deque.size(), 2);
+
+    // Continue pushing elements
+    deque.emplace(47, "forty-seven");
+    deque.emplace(53, "fifty-three");
+    deque.emplace(43, "forty-three");
+
+    // Resize the deque while it is wrapped around
+    deque.resize(4);
+
+    // Validate the contents and order after resizing
+    ASSERT_EQ(deque.size(), 4);
+    ASSERT_EQ(deque.pop().key, 20);
+    ASSERT_EQ(deque.pop().key, 25);
+    ASSERT_EQ(deque.pop().key, 43);
+    ASSERT_EQ(deque.pop().key, 47);
+    ASSERT_TRUE(deque.empty());
+}
+
 class ConcurrentDequeTest : public ::testing::Test {
 protected:
     BoundedMinPriorityDeque<int, std::string> deque;

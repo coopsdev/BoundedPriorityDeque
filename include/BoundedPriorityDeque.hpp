@@ -132,14 +132,14 @@ protected:
      * @return The optimal insertion index for the targeted insertion element.
      */
     size_t binarySearch(const BoundingPair<K, V>& target) const {
-        auto start = _head;
-        auto end = start + _size;
+        auto start = 0;
+        auto end = _size;
         while (start != end) {
-            size_t mid = (start + (end - start) / 2) % _k;
-            if (compare(_buffer[mid].key, target.key)) start = (mid + 1) % _k;
+            size_t mid = start + (end - start) / 2;
+            if (compare(_buffer[(_head + mid) % _k].key, target.key)) start = mid + 1;
             else end = mid;
         }
-        return start;
+        return (_head + start) % _k;
     }
 
     /**
@@ -163,13 +163,17 @@ protected:
         }
 
         auto index = binarySearch(element);
-        if (index != nextIndex(_tail)) {
-            if (_head > 0) std::move(_buffer.begin() + _head, _buffer.begin() + index + 1, _buffer.begin() + _head - 1);
-            else std::move_backward(_buffer.begin() + index, _buffer.begin() + _tail + 1, _buffer.begin() + _tail + 2);
+        if (index == nextIndex(_tail)) _tail = nextIndex(_tail);
+        else if (index == prevIndex(_head)) _head = prevIndex(_head);
+        else if (_head <= _tail && _head > 0) {
+            std::move(_buffer.begin() + _head, _buffer.begin() + index + 1, _buffer.begin() + _head - 1);
+            --_head;
+        } else {
+            std::move_backward(_buffer.begin() + index, _buffer.begin() + _tail + 1, _buffer.begin() + _tail + 2);
+            ++_tail;
         }
 
         _buffer[index] = element;
-        _tail = nextIndex(_tail);
         ++_size;
     }
 
@@ -377,19 +381,30 @@ public:
      * @param k The new capacity.
      */
     void resize(size_t k) {
-        _k = k;
+        if (k == 0) return;
+
+        std::vector<BoundingPair<K, V>> newBuffer(k);
+
         if (_head <= _tail) {
-            if (_head > 0) std::move(_buffer.begin() + _head, _buffer.begin() + _tail + 1, _buffer.begin());
-            _buffer.resize(_k);
+            size_t elementsToCopy = std::min(_size, k);
+            std::move(_buffer.begin() + _head, _buffer.begin() + _head + elementsToCopy, newBuffer.begin());
+            _size = elementsToCopy;
+        } else {
+            size_t topSize = _k - _head;
+            size_t bottomSize = _tail + 1;
+            size_t elementsToCopyTop = std::min(topSize, k);
+            size_t elementsToCopyBottom = std::min(bottomSize, k - elementsToCopyTop);
+
+            std::move(_buffer.begin() + _head, _buffer.begin() + _head + elementsToCopyTop, newBuffer.begin());
+            std::move(_buffer.begin(), _buffer.begin() + elementsToCopyBottom, newBuffer.begin() + elementsToCopyTop);
+
+            _size = elementsToCopyTop + elementsToCopyBottom;
         }
-        else {
-            std::vector<BoundingPair<K, V>> newBuffer(_k);
-            std::move(_buffer.begin() + _head, _buffer.end() + 1, newBuffer.begin());
-            std::move(_buffer.begin(), _buffer.begin() + _tail + 1, newBuffer.begin() + (_k - _head - 1));
-            _buffer = newBuffer;
-            _head = 0;
-            _tail = _size - 1;
-        }
+
+        _buffer.swap(newBuffer);
+        _k = k;
+        _head = 0;
+        _tail = _size - 1;
     }
 };
 
