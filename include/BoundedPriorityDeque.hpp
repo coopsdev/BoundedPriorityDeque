@@ -257,7 +257,13 @@ public:
      * @param key The bounding key value
      * @param value The data held by the bounding pair.
      */
-    void emplace(K key, const V& value) { push({ key, value }); }
+    void emplace(K key, const V& value) {
+        if (_size == _k) {
+            if (compare(key, _buffer[_tail].key)) _popBottom();
+            else return;
+        }
+        insert({ key, value });
+    }
 
     /**
      * @brief Inserts an element into the vector.
@@ -270,7 +276,7 @@ public:
      */
     void push(const BoundingPair<K, V>& element) {
         if (_size == _k) {
-            if (compare(element.key, _buffer[_tail].key)) popBottom();
+            if (compare(element.key, _buffer[_tail].key)) _popBottom();
             else return;
         }
         insert(element);
