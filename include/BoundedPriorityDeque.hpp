@@ -183,9 +183,17 @@ protected:
     /**
      * @brief Internal method with no return val
      */
+    void _popTop() {
+        _head = nextIndex(_head);
+        if (--_size == 0) clear();
+    }
+
+    /**
+     * @brief Internal method with no return val
+     */
     void _popBottom() {
         _tail = prevIndex(_tail);
-        --_size;
+        if (--_size == 0) clear();
     }
 
 public:
@@ -306,8 +314,7 @@ public:
         if (empty()) throw std::runtime_error("Attempted to pop from empty BoundedPriorityDeque");
 #endif
         auto index = _head;
-        _head = nextIndex(_head);
-        --_size;
+        _popTop();
         return _buffer[index];
     }
 
@@ -321,8 +328,7 @@ public:
         if (empty()) throw std::runtime_error("Attempted to pop from empty BoundedPriorityDeque");
 #endif
         auto index = _tail;
-        _tail = prevIndex(_tail);
-        --_size;
+        _popBottom();
         return _buffer[index];
     }
 
