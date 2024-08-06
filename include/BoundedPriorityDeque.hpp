@@ -2,8 +2,8 @@
 // Created by Cooper Larson on 7/30/24.
 //
 
-#ifndef SERVER_BOUNDED_PRIORITY_DEQUE_BASE_H
-#define SERVER_BOUNDED_PRIORITY_DEQUE_BASE_H
+#ifndef BOUNDED_PRIORITY_DEQUE_H
+#define BOUNDED_PRIORITY_DEQUE_H
 
 #include <vector>
 
@@ -183,9 +183,17 @@ protected:
     /**
      * @brief Internal method with no return val
      */
+    void _popTop() {
+        _head = nextIndex(_head);
+        if (--_size == 0) clear();
+    }
+
+    /**
+     * @brief Internal method with no return val
+     */
     void _popBottom() {
         _tail = prevIndex(_tail);
-        --_size;
+        if (--_size == 0) clear();
     }
 
 public:
@@ -306,8 +314,7 @@ public:
         if (empty()) throw std::runtime_error("Attempted to pop from empty BoundedPriorityDeque");
 #endif
         auto index = _head;
-        _head = nextIndex(_head);
-        --_size;
+        _popTop();
         return _buffer[index];
     }
 
@@ -321,8 +328,7 @@ public:
         if (empty()) throw std::runtime_error("Attempted to pop from empty BoundedPriorityDeque");
 #endif
         auto index = _tail;
-        _tail = prevIndex(_tail);
-        --_size;
+        _popBottom();
         return _buffer[index];
     }
 
@@ -477,4 +483,4 @@ public:
             BoundedPriorityDequeBase<K, V>(capacity), comparator(comp) {}
 };
 
-#endif // SERVER_BOUNDED_PRIORITY_DEQUE_BASE_H
+#endif // BOUNDED_PRIORITY_DEQUE_H
