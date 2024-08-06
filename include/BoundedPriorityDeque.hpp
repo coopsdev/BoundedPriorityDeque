@@ -2,8 +2,8 @@
 // Created by Cooper Larson on 7/30/24.
 //
 
-#ifndef SERVER_BOUNDED_PRIORITY_DEQUE_BASE_H
-#define SERVER_BOUNDED_PRIORITY_DEQUE_BASE_H
+#ifndef BOUNDED_PRIORITY_DEQUE_H
+#define BOUNDED_PRIORITY_DEQUE_H
 
 #include <vector>
 
@@ -483,4 +483,4 @@ public:
             BoundedPriorityDequeBase<K, V>(capacity), comparator(comp) {}
 };
 
-#endif // SERVER_BOUNDED_PRIORITY_DEQUE_BASE_H
+#endif // BOUNDED_PRIORITY_DEQUE_H
