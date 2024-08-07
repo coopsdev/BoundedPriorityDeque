@@ -460,8 +460,8 @@ public:
 };
 
 /**
- * @class BoundedPriorityDeque
- * @brief Lightweight custom-comparator priority dequeue
+ * @class BoundedPriorityDequeKeyed
+ * @brief Lightweight custom key comparator priority dequeue
  *
  * This class provides a lightweight custom-comparator implement of the base class.
  * This derived class allows for non-standard or non-arithmetic key types via a custom-comparator template argument.
@@ -472,15 +472,56 @@ public:
  * @tparam V Type of the value.
  */
 template<typename K, typename V, typename Comparator = std::less<K>>
-class BoundedPriorityDeque : public BoundedPriorityDequeBase<K, V> {
+class BoundedPriorityDequeKeyed : public BoundedPriorityDequeBase<K, V> {
 protected:
     Comparator comparator;
 
     [[nodiscard]] bool compare(K a, K b) const override { return comparator(a, b); }
 
 public:
+    explicit BoundedPriorityDequeKeyed(unsigned int capacity = 0, Comparator comp = Comparator()) :
+            BoundedPriorityDequeBase<K, V>(capacity), comparator(comp) {}
+};
+
+/**
+ * @class BoundedPriorityDeque
+ * @brief Lightweight custom value-based comparator priority dequeue
+ *
+ * This derived class enables comparison on a value objects internal state with a comparator.
+ *
+ * The addition of a comparisonValue() allows for a key to be extracted from the value objects internal structure.
+ *
+ * ex. for double:  [[nodiscard]] double comparisonValue(const Edge& edge) const { return edge.distance; }
+ *
+ * The custom-comparator should be in the form of a function<bool(K a, K b)> comparator which returns
+ * true if 'a' has a higher-priority than 'b'.
+ *
+ * @tparam K Template-comparator compatible key Type.
+ * @tparam V Type of the value.
+ */
+template<typename V, typename Comparator, typename K = decltype(std::declval<Comparator>().comparisonValue(std::declval<V>()))>
+class BoundedPriorityDeque : public BoundedPriorityDequeBase<K, V> {
+protected:
+    Comparator comparator;
+
+    [[nodiscard]] bool compare(K a, K b) const override {
+        return comparator(a, b);
+    }
+
+    K extractKey(const V& value) const {
+        return comparator.comparisonValue(value);
+    }
+
+public:
     explicit BoundedPriorityDeque(unsigned int capacity = 0, Comparator comp = Comparator()) :
             BoundedPriorityDequeBase<K, V>(capacity), comparator(comp) {}
+
+    void emplace(const V& value) {
+        K key = extractKey(value);
+        BoundedPriorityDequeBase<K, V>::emplace(key, value);
+    }
+
+    void push(const V& value) { emplace(value); }
 };
 
 #endif // BOUNDED_PRIORITY_DEQUE_H

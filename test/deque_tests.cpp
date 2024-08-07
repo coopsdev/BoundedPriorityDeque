@@ -52,7 +52,7 @@ TEST(MaxDequeTest, BasicOperations) {
 }
 
 TEST(BoundedDequeTest, CustomComparator) {
-    BoundedPriorityDeque<int, std::string, std::greater<>> deque(10, std::greater<>());
+    BoundedPriorityDequeKeyed<int, std::string, std::greater<>> deque(10, std::greater<>());
     deque.push(BoundingPair<int, std::string>(10, "ten"));
     deque.push(BoundingPair<int, std::string>(20, "twenty"));
     deque.push(BoundingPair<int, std::string>(5, "five"));
