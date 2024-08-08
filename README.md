@@ -1,6 +1,8 @@
 # BoundedPriorityDeque.hpp
 
-The Bounded Priority Deque is a no-nonsense, single-header C++ library built for one purpose: to efficiently manage and optimize data handling without the typical overhead associated with standard library structures. Designed specifically for high-performance environments, it excels in operations like multi-threaded ball tree constructions and the Traveling Salesman Problem (TSP) optimizations.
+The Bounded Priority Deque is a single-header C++ library built for one purpose:
+  * To efficiently manage data via highly-optimized data-handling techniques; without the typical overhead associated with standard library structures.
+  * Designed specifically for high-performance environments, it excels in operations like bottom-up ball tree construction and the TSP (Traveling Salesman Problem) optimizations.
 
 ## Release Status: Nearing Completion
 
