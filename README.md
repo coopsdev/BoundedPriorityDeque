@@ -9,7 +9,8 @@ The Bounded Priority Deque is a single-header C++ library built for one purpose:
 The final stretch before the stable release of the Bounded Priority Deque is designed to enhance project performance with unmatched efficiency.
 
 [Access Early Release Documentation](https://bounded-priority-deque.cooperhlarson.com)
-[Project Overview @ cooperhlarson.com](https://cooperhlarson.com/projects/boundedprioritydequehpp)
+
+[Project Recap | cooperhlarson.com](https://cooperhlarson.com/projects/boundedprioritydequehpp)
 
 ## Motivation
 
