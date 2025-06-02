@@ -38,6 +38,8 @@ jobs:
           conan install . --build=missing
 
       - name: Compile and Link
+        env:
+          CONAN_HOME: /srv/conan-home
         run: |
           conan build . -pr:a vps-release --build=missing
 
@@ -45,10 +47,14 @@ jobs:
         run: ccache -s
 
       - name: Create Package
+        env:
+          CONAN_HOME: /srv/conan-home
         run: |
           cd /home/gh-runner/actions-runner/_work/BoundedPriorityDeque/BoundedPriorityDeque
           conan create . -pr:a vps-release --build=missing
 
       - name: Upload Packages to Artifactory
+        env:
+          CONAN_HOME: /srv/conan-home
         run: |
           conan upload "*" -r vps-local --confirm
