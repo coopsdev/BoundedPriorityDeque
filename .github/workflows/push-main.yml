@@ -34,6 +34,8 @@ jobs:
             ${{ runner.os }}-ccache-${{ steps.latest-tag.outputs.tag }}
 
       - name: Install Package Dependencies
+        env:
+          CONAN_HOME: /srv/conan-home
         run: |
           conan install . --build=missing
 
